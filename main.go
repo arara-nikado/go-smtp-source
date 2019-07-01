@@ -53,6 +53,7 @@ type Config struct {
 	// extension
 	UseTLS      bool
 	ResolveOnce bool
+	NoSend      bool
 	QPS         rate.Limit
 
 	File string
@@ -83,6 +84,7 @@ func Parse() error {
 
 		usetls      = flag.Bool("tls", false, usage("specify if STARTTLS is needed.", "false"))
 		resolveOnce = flag.Bool("resolve-once", false, usage("resolve the hostname only once.", "false"))
+		noSend      = flag.Bool("no-send", false, usage("no send email.", "false"))
 
 		qps = flag.Float64("q", 0, usage("specify a queries per second.", "no rate limit"))
 
@@ -112,6 +114,7 @@ func Parse() error {
 
 		UseTLS:      *usetls,
 		ResolveOnce: *resolveOnce,
+		NoSend:      *noSend,
 
 		QPS: rate.Limit(*qps),
 
@@ -141,6 +144,13 @@ func sendMail(c *smtp.Client, tx *transaction) error {
 			return errors.Wrap(err, "unable to say hello")
 		}
 	}
+
+	if config.NoSend {
+		if err := c.Quit(); err != nil {
+			log.Println("unable to quit a session:", err)
+		}
+	}
+
 	if err := c.Mail(config.Sender); err != nil {
 		return errors.Wrap(err, "unable to start SMTP transaction")
 	}
