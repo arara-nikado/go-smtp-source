@@ -135,6 +135,10 @@ type transaction struct {
 }
 
 func sendMail(c *smtp.Client, tx *transaction) error {
+	if config.NoSend {
+		return nil
+	}
+
 	if config.UseTLS {
 		if err := c.StartTLS(config.tlsConfig); err != nil {
 			return errors.Wrap(err, "unable to issue STARTTLS")
@@ -142,12 +146,6 @@ func sendMail(c *smtp.Client, tx *transaction) error {
 	} else {
 		if err := c.Hello(myhostname); err != nil {
 			return errors.Wrap(err, "unable to say hello")
-		}
-	}
-
-	if config.NoSend {
-		if err := c.Quit(); err != nil {
-			log.Println("unable to quit a session:", err)
 		}
 	}
 
