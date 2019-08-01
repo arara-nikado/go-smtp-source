@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nabeken/go-smtp-source/net/textproto"
+	"./net/textproto"
 )
 
 type authTest struct {

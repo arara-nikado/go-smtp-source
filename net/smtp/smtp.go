@@ -23,8 +23,9 @@ import (
 	"io"
 	"net"
 	"strings"
+	"log"
 
-	"github.com/nabeken/go-smtp-source/net/textproto"
+	"net/textproto"
 )
 
 // A Client represents a client connection to an SMTP server.
@@ -45,6 +46,8 @@ type Client struct {
 	localName  string // the name to use in HELO/EHLO
 	didHello   bool   // whether we've said HELO/EHLO
 	helloError error  // the error from the hello
+	// console log
+	verbose    bool
 }
 
 // Dial returns a new Client connected to an SMTP server at addr.
@@ -67,8 +70,20 @@ func NewClient(conn net.Conn, host string) (*Client, error) {
 		text.Close()
 		return nil, err
 	}
-	c := &Client{Text: text, conn: conn, serverName: host, localName: "localhost"}
+	c := &Client{Text: text, conn: conn, serverName: host, localName: "localhost", verbose: false}
 	return c, nil
+}
+
+// Verbose
+func (c *Client) Verbose() bool {
+	return c.verbose
+}
+
+// VerboseOn
+func (c *Client) VerboseOn() {
+	if !c.verbose {
+		c.verbose = true
+	}
 }
 
 // Close closes the connection.
@@ -107,9 +122,15 @@ func (c *Client) cmd(expectCode int, format string, args ...interface{}) (int, s
 	if err != nil {
 		return 0, "", err
 	}
+	if c.verbose {
+		log.Printf(format, args...)
+	}
 	c.Text.StartResponse(id)
 	defer c.Text.EndResponse(id)
 	code, msg, err := c.Text.ReadResponse(expectCode)
+	if c.verbose {
+		log.Printf("<<< %v %v", code, msg)
+	}
 	return code, msg, err
 }
 
@@ -344,6 +365,9 @@ func SendMail(addr string, a Auth, from string, to []string, msg []byte) error {
 	_, err = w.Write(msg)
 	if err != nil {
 		return err
+	}
+	if c.verbose {
+		log.Printf("<<< .")
 	}
 	err = w.Close()
 	if err != nil {

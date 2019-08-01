@@ -10,16 +10,17 @@ import (
 	"io"
 	"log"
 	"net"
-	"net/textproto"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/google/gops/agent"
-	"github.com/nabeken/go-smtp-source/net/smtp"
 	"github.com/pkg/errors"
 	"golang.org/x/time/rate"
+
+	"./net/textproto"
+	"./net/smtp"
 )
 
 var (
@@ -54,6 +55,7 @@ type Config struct {
 	UseTLS      bool
 	ResolveOnce bool
 	NoSend      bool
+	NoMail      bool
 	QPS         rate.Limit
 
 	File string
@@ -85,6 +87,7 @@ func Parse() error {
 		usetls      = flag.Bool("tls", false, usage("specify if STARTTLS is needed.", "false"))
 		resolveOnce = flag.Bool("resolve-once", false, usage("resolve the hostname only once.", "false"))
 		noSend      = flag.Bool("no-send", false, usage("no send email.", "false"))
+		noMail      = flag.Bool("no-mail", false, usage("no send MAIL command.", "false"))
 
 		qps = flag.Float64("q", 0, usage("specify a queries per second.", "no rate limit"))
 
@@ -115,6 +118,7 @@ func Parse() error {
 		UseTLS:      *usetls,
 		ResolveOnce: *resolveOnce,
 		NoSend:      *noSend,
+		NoMail:      *noMail,
 
 		QPS: rate.Limit(*qps),
 
@@ -137,6 +141,100 @@ type transaction struct {
 func sendMail(c *smtp.Client, tx *transaction) error {
 	if config.NoSend {
 		return nil
+	}
+
+	if config.Verbose {
+		c.VerboseOn()
+	}
+
+	if config.UseTLS {
+		if err := c.StartTLS(config.tlsConfig); err != nil {
+			return errors.Wrap(err, "unable to issue STARTTLS")
+		}
+	} else {
+		if err := c.Hello(myhostname); err != nil {
+			return errors.Wrap(err, "unable to say hello")
+		}
+	}
+
+	if config.NoMail {
+		return nil
+	}
+
+	if err := c.Mail(config.Sender); err != nil {
+		return errors.Wrap(err, "unable to start SMTP transaction")
+	}
+
+	for i := range tx.Recipients {
+		if err := c.Rcpt(tx.Recipients[i]); err != nil {
+			return errors.Wrap(err, "unable to issue RCPT")
+		}
+	}
+
+	wc, err := c.Data()
+	if err != nil {
+		return errors.Wrap(err, "unable to start DATA")
+	}
+	if data := tx.Data; len(data) > 0 {
+		if _, err := wc.Write(data); err != nil {
+			return errors.Wrap(err, "unable to write preformatted data")
+		}
+	} else {
+		fmt.Fprintf(wc, "From: <%s>\n", config.Sender)
+		fmt.Fprintf(wc, "To: <%s>\n", config.Recipient)
+		fmt.Fprintf(wc, "Date: %s\n", myDate.Format(time.RFC1123))
+
+		subject := fmt.Sprintf(config.Subject, tx.TxIdx)
+		if subjectIdx := strings.Index(subject, "%!(EXTRA"); subjectIdx >= 0 {
+			fmt.Fprintf(wc, "Subject: %s\n", subject[0:subjectIdx])
+		} else {
+			fmt.Fprintf(wc, "Subject: %s\n", subject)
+		}
+		fmt.Fprintf(wc, "Message-Id: <%04x.%04x@%s>\n", myPid, config.MessageCount, myhostname)
+		fmt.Fprintln(wc, "")
+
+		if config.MessageSize == 0 {
+			for i := 1; i < 5; i++ {
+				fmt.Fprintf(wc, "La de da de da %d.\n", i)
+			}
+		} else {
+			for i := 1; i < config.MessageSize; i++ {
+				fmt.Fprint(wc, "X")
+				if i%80 == 0 {
+					fmt.Fprint(wc, "\n")
+				}
+			}
+		}
+	}
+
+	if c.Verbose() {
+		log.Printf("<<< .")
+	}
+	return errors.Wrap(wc.Close(), "unable to commit the SMTP transaction")
+}
+
+
+func sendMailTlsDelay(c *smtp.Client, tx *transaction) error {
+	if config.NoSend {
+		return nil
+	}
+
+	if config.Verbose {
+		c.VerboseOn()
+	}
+
+	if config.NoMail {
+		return nil
+	}
+
+	if err := c.Mail(config.Sender); err != nil {
+		return errors.Wrap(err, "unable to start SMTP transaction")
+	}
+
+	for i := range tx.Recipients {
+		if err := c.Rcpt(tx.Recipients[i]); err != nil {
+			return errors.Wrap(err, "unable to issue RCPT")
+		}
 	}
 
 	if config.UseTLS {
@@ -195,6 +293,9 @@ func sendMail(c *smtp.Client, tx *transaction) error {
 		}
 	}
 
+	if c.Verbose() {
+		log.Printf("<<< .")
+	}
 	return errors.Wrap(wc.Close(), "unable to commit the SMTP transaction")
 }
 
@@ -360,10 +461,15 @@ func main() {
 			}
 
 			limiter.WaitN(context.TODO(), len(cc.tx.Recipients))
-			if err := sendMail(cc.c, cc.tx); err != nil {
-				log.Println("unable to send a mail:", err)
+			if true {
+				if err := sendMail(cc.c, cc.tx); err != nil {
+					log.Println("unable to send a mail:", err)
+				}
+			} else {
+				if err := sendMailTlsDelay(cc.c, cc.tx); err != nil {
+					log.Println("unable to send a mail:", err)
+				}
 			}
-
 			if err := cc.c.Quit(); err != nil {
 				log.Println("unable to quit a session:", err)
 			}
