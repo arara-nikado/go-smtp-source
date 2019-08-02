@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"./net/textproto"
+	"net/textproto"
 )
 
 type authTest struct {
@@ -778,3 +778,152 @@ UQIhAO6PEI55K3SpNIdc2k5f0xz+9rodJCYzu51EwWX7r8ufAiEA3C9EkLiU2NuK
 sHtB5EYF9Dwm9QIhAJuCquuH4mDzVjUntXjXOQPdj7sRqVGCNWdrJwOukat7AiAy
 LXLEwb77DIPoI5ZuaXQC+MnyyJj1ExC9RFcGz+bexA==
 -----END RSA PRIVATE KEY-----`)
+
+func TestGmailSmtpHello(t *testing.T) {
+	var helloserver = []string{
+		"",
+		"502 Not implemented\n",
+		"250 User is valid\n",
+		"235 Accepted\n",
+		"250 Sender ok\n",
+		"",
+		"250 Reset ok\n",
+		"221 Goodbye\n",
+		"250 Sender ok\n",
+	}
+	var helloclient = []string{
+		"",
+		"STARTTLS\n",
+		"VRFY test@example.com\n",
+		"AUTH PLAIN AHVzZXIAcGFzcw==\n",
+		"MAIL FROM:<test@example.com>\n",
+		"",
+		"RSET\n",
+		"QUIT\n",
+		"VRFY test@example.com\n",
+	}
+
+	if len(helloserver) != len(helloclient) {
+		t.Fatalf("Hello server and client size mismatch")
+	}
+
+	for i := 0; i < len(helloserver); i++ {
+		addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+		conn, err := net.Dial("tcp", addr + ":" + port)
+
+		c, err := NewClient(conn, addr)
+		if err != nil {
+			t.Fatalf("NewClient: %v", err)
+		}
+
+		c.VerboseOn();
+
+		defer c.Close()
+		c.localName = "localhost"
+		err = nil
+
+		switch i {
+		case 0:
+			err = c.Hello("localhost")
+		case 1:
+			err = c.StartTLS(nil)
+			if err.Error() == "502 Not implemented" {
+				err = nil
+			}
+		case 2:
+			err = c.Verify("test@example.com")
+		case 3:
+			c.tls = true
+			c.serverName = addr
+			err = c.Auth(PlainAuth("", "user", "pass", "smtp.google.com"))
+		case 4:
+			err = c.Mail("test@example.com")
+		case 5:
+			ok, _ := c.Extension("feature")
+			if ok {
+				t.Errorf("Expected FEATURE not to be supported")
+			}
+		case 6:
+			err = c.Reset()
+		case 7:
+			err = c.Quit()
+		case 8:
+			err = c.Verify("test@example.com")
+			if err != nil {
+				err = c.Hello("customhost")
+				if err != nil {
+					t.Errorf("Want error, got none")
+				}
+			}
+		default:
+			t.Fatalf("Unhandled command")
+		}
+
+		if err != nil {
+			t.Errorf("Command %d failed: %v", i, err)
+		}
+
+		c.Quit()
+	}
+}
+
+func TestGmailSmtpStartTls(t *testing.T) {
+	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	conn, err := net.Dial("tcp", addr + ":" + port)
+
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
+		if err := tcpConn.SetLinger(0); err != nil {
+			t.Fatalf("tcp error")
+		}
+	}
+
+	c, err := NewClient(conn, addr)
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+
+	c.VerboseOn();
+
+	// defer c.Close()
+	c.localName = "localhost"
+	err = nil
+
+	var tlsconfig = &tls.Config {
+		InsecureSkipVerify: true,
+	}
+	if err := c.StartTLS(tlsconfig); err != nil {
+		t.Errorf("StartTLS: %v", err)
+	}
+
+	if err := c.Mail("nikado@arara.com"); err != nil {
+		t.Fatalf("MAIL should require authentication: %s", err)
+	}
+	if err := c.Rcpt("nikado.kei@gmail.com"); err != nil {
+		t.Fatalf("RCPT failed: %s", err)
+	}
+	msg := `From: nikado@arara.com
+To: nikado.kei@gmail.com
+Subject: Hooray for Go
+
+Line 1
+.Leading dot line .
+Goodbye.`
+	w, err := c.Data()
+	if err != nil {
+		t.Fatalf("DATA failed: %s", err)
+	}
+	if _, err := w.Write([]byte(msg)); err != nil {
+		t.Fatalf("Data write failed: %s", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("Bad data response: %s", err)
+	}
+
+	if err := c.Quit(); err != nil {
+		t.Fatalf("QUIT failed: %s", err)
+	}
+
+	if err != nil {
+		t.Errorf("Command failed: %v", err)
+	}
+}
