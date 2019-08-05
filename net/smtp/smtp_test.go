@@ -927,3 +927,411 @@ Goodbye.`
 		t.Errorf("Command failed: %v", err)
 	}
 }
+
+func TestGmailSmtpStartTlsQuit(t *testing.T) {
+	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	conn, err := net.Dial("tcp", addr + ":" + port)
+
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
+		if err := tcpConn.SetLinger(0); err != nil {
+			t.Fatalf("tcp error")
+		}
+	}
+
+	c, err := NewClient(conn, addr)
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+
+	c.VerboseOn();
+
+	// defer c.Close()
+	c.localName = "localhost"
+	err = nil
+
+	var tlsconfig = &tls.Config {
+		InsecureSkipVerify: true,
+	}
+	if err := c.StartTLS(tlsconfig); err != nil {
+		t.Errorf("StartTLS: %v", err)
+	}
+
+	if err := c.Quit(); err != nil {
+		t.Fatalf("QUIT failed: %s", err)
+	}
+
+	if err != nil {
+		t.Errorf("Command failed: %v", err)
+	}
+}
+
+func TestGmailSmtpStartTlsMailQuit(t *testing.T) {
+	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	conn, err := net.Dial("tcp", addr + ":" + port)
+
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
+		if err := tcpConn.SetLinger(0); err != nil {
+			t.Fatalf("tcp error")
+		}
+	}
+
+	c, err := NewClient(conn, addr)
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+
+	c.VerboseOn();
+
+	// defer c.Close()
+	c.localName = "localhost"
+	err = nil
+
+	var tlsconfig = &tls.Config {
+		InsecureSkipVerify: true,
+	}
+	if err := c.StartTLS(tlsconfig); err != nil {
+		t.Errorf("StartTLS: %v", err)
+	}
+
+	if err := c.Mail("nikado@arara.com"); err != nil {
+		t.Fatalf("MAIL should require authentication: %s", err)
+	}
+	if err := c.Quit(); err != nil {
+		t.Fatalf("QUIT failed: %s", err)
+	}
+
+	if err != nil {
+		t.Errorf("Command failed: %v", err)
+	}
+}
+
+func TestGmailSmtpStartTlsMailRcptQuit(t *testing.T) {
+	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	conn, err := net.Dial("tcp", addr + ":" + port)
+
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
+		if err := tcpConn.SetLinger(0); err != nil {
+			t.Fatalf("tcp error")
+		}
+	}
+
+	c, err := NewClient(conn, addr)
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+
+	c.VerboseOn();
+
+	// defer c.Close()
+	c.localName = "localhost"
+	err = nil
+
+	var tlsconfig = &tls.Config {
+		InsecureSkipVerify: true,
+	}
+	if err := c.StartTLS(tlsconfig); err != nil {
+		t.Errorf("StartTLS: %v", err)
+	}
+
+	if err := c.Mail("nikado@arara.com"); err != nil {
+		t.Fatalf("MAIL should require authentication: %s", err)
+	}
+	if err := c.Rcpt("nikado.kei@gmail.com"); err != nil {
+		t.Fatalf("RCPT failed: %s", err)
+	}
+	if err := c.Quit(); err != nil {
+		t.Fatalf("QUIT failed: %s", err)
+	}
+
+	if err != nil {
+		t.Errorf("Command failed: %v", err)
+	}
+}
+
+
+func TestGmailSmtpStartTlsRsetQuit(t *testing.T) {
+	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	conn, err := net.Dial("tcp", addr + ":" + port)
+
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
+		if err := tcpConn.SetLinger(0); err != nil {
+			t.Fatalf("tcp error")
+		}
+	}
+
+	c, err := NewClient(conn, addr)
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+
+	c.VerboseOn();
+
+	// defer c.Close()
+	c.localName = "localhost"
+	err = nil
+
+	var tlsconfig = &tls.Config {
+		InsecureSkipVerify: true,
+	}
+	if err := c.StartTLS(tlsconfig); err != nil {
+		t.Errorf("StartTLS: %v", err)
+	}
+	if err := c.Reset(); err != nil {
+		t.Fatalf("RSET failed: %s", err)
+	}
+	if err := c.Quit(); err != nil {
+		t.Fatalf("QUIT failed: %s", err)
+	}
+
+	if err != nil {
+		t.Errorf("Command failed: %v", err)
+	}
+}
+
+func TestGmailSmtpStartTlsMailRcptRsetQuit(t *testing.T) {
+	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	conn, err := net.Dial("tcp", addr + ":" + port)
+
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
+		if err := tcpConn.SetLinger(0); err != nil {
+			t.Fatalf("tcp error")
+		}
+	}
+
+	c, err := NewClient(conn, addr)
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+
+	c.VerboseOn();
+
+	// defer c.Close()
+	c.localName = "localhost"
+	err = nil
+
+	var tlsconfig = &tls.Config {
+		InsecureSkipVerify: true,
+	}
+	if err := c.StartTLS(tlsconfig); err != nil {
+		t.Errorf("StartTLS: %v", err)
+	}
+
+	if err := c.Mail("nikado@arara.com"); err != nil {
+		t.Fatalf("MAIL should require authentication: %s", err)
+	}
+	if err := c.Rcpt("nikado.kei@gmail.com"); err != nil {
+		t.Fatalf("RCPT failed: %s", err)
+	}
+	if err := c.Reset(); err != nil {
+		t.Fatalf("RSET failed: %s", err)
+	}
+
+	if err := c.Quit(); err != nil {
+		t.Fatalf("QUIT failed: %s", err)
+	}
+
+	if err != nil {
+		t.Errorf("Command failed: %v", err)
+	}
+}
+
+func TestGmailSmtpStartTlsMailRcptRestMailRcptDataQuit(t *testing.T) {
+	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	conn, err := net.Dial("tcp", addr + ":" + port)
+
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
+		if err := tcpConn.SetLinger(0); err != nil {
+			t.Fatalf("tcp error")
+		}
+	}
+
+	c, err := NewClient(conn, addr)
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+
+	c.VerboseOn();
+
+	// defer c.Close()
+	c.localName = "localhost"
+	err = nil
+
+	var tlsconfig = &tls.Config {
+		InsecureSkipVerify: true,
+	}
+	if err := c.StartTLS(tlsconfig); err != nil {
+		t.Errorf("StartTLS: %v", err)
+	}
+	if err := c.Mail("nikado+beforereset@arara.com"); err != nil {
+		t.Fatalf("MAIL should require authentication: %s", err)
+	}
+	if err := c.Rcpt("nikado.kei+beforereset@gmail.com"); err != nil {
+		t.Fatalf("RCPT failed: %s", err)
+	}
+	if err := c.Reset(); err != nil {
+		t.Fatalf("RSET failed: %s", err)
+	}
+
+	if err := c.Mail("nikado+afterreset@arara.com"); err != nil {
+		t.Fatalf("MAIL should require authentication: %s", err)
+	}
+	if err := c.Rcpt("nikado.kei+afterreset@gmail.com"); err != nil {
+		t.Fatalf("RCPT failed: %s", err)
+	}
+	msg := `From: nikado@arara.com
+To: nikado.kei@gmail.com
+Subject: Hooray for Go
+
+Line 1
+.Leading dot line .
+Goodbye.`
+	w, err := c.Data()
+	if err != nil {
+		t.Fatalf("DATA failed: %s", err)
+	}
+	if _, err := w.Write([]byte(msg)); err != nil {
+		t.Fatalf("Data write failed: %s", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("Bad data response: %s", err)
+	}
+
+	if err := c.Quit(); err != nil {
+		t.Fatalf("QUIT failed: %s", err)
+	}
+
+	if err != nil {
+		t.Errorf("Command failed: %v", err)
+	}
+}
+
+func TestGmailSmtpMailStartTlsMailRcptData(t *testing.T) {
+	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	conn, err := net.Dial("tcp", addr + ":" + port)
+
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
+		if err := tcpConn.SetLinger(0); err != nil {
+			t.Fatalf("tcp error")
+		}
+	}
+
+	c, err := NewClient(conn, addr)
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+
+	c.VerboseOn();
+
+	// defer c.Close()
+	c.localName = "localhost"
+	err = nil
+
+	if err := c.Mail("nikado+before@arara.com"); err != nil {
+		t.Fatalf("MAIL should require authentication: %s", err)
+	}
+	var tlsconfig = &tls.Config {
+		InsecureSkipVerify: true,
+	}
+	if err := c.StartTLS(tlsconfig); err != nil {
+		t.Errorf("StartTLS: %v", err)
+	}
+
+	if err := c.Mail("nikado+after@arara.com"); err != nil {
+		t.Fatalf("MAIL should require authentication: %s", err)
+	}
+	if err := c.Rcpt("nikado.kei+beforereset@gmail.com"); err != nil {
+		t.Fatalf("RCPT failed: %s", err)
+	}
+	msg := `From: nikado@arara.com
+To: nikado.kei@gmail.com
+Subject: Hooray for Go
+
+Line 1
+.Leading dot line .
+Goodbye.`
+	w, err := c.Data()
+	if err != nil {
+		t.Fatalf("DATA failed: %s", err)
+	}
+	if _, err := w.Write([]byte(msg)); err != nil {
+		t.Fatalf("Data write failed: %s", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("Bad data response: %s", err)
+	}
+	if err := c.Quit(); err != nil {
+		t.Fatalf("QUIT failed: %s", err)
+	}
+
+	if err != nil {
+		t.Errorf("Command failed: %v", err)
+	}
+}
+
+func TestGmailSmtpMailRcptStartTlsMailRcpt(t *testing.T) {
+	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	conn, err := net.Dial("tcp", addr + ":" + port)
+
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
+		if err := tcpConn.SetLinger(0); err != nil {
+			t.Fatalf("tcp error")
+		}
+	}
+
+	c, err := NewClient(conn, addr)
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+
+	c.VerboseOn();
+
+	// defer c.Close()
+	c.localName = "localhost"
+	err = nil
+
+	if err := c.Mail("nikado+before@arara.com"); err != nil {
+		t.Fatalf("MAIL should require authentication: %s", err)
+	}
+	if err := c.Rcpt("nikado.kei+before@gmail.com"); err != nil {
+		t.Fatalf("RCPT failed: %s", err)
+	}
+
+	var tlsconfig = &tls.Config {
+		InsecureSkipVerify: true,
+	}
+	if err := c.StartTLS(tlsconfig); err != nil {
+		t.Errorf("StartTLS: %v", err)
+	}
+
+	if err := c.Mail("nikado+after@arara.com"); err != nil {
+		t.Fatalf("MAIL should require authentication: %s", err)
+	}
+	if err := c.Rcpt("nikado.kei+after@gmail.com"); err != nil {
+		t.Fatalf("RCPT failed: %s", err)
+	}
+	msg := `From: nikado@arara.com
+To: nikado.kei@gmail.com
+Subject: Hooray for Go
+
+Line 1
+.Leading dot line .
+Goodbye.`
+	w, err := c.Data()
+	if err != nil {
+		t.Fatalf("DATA failed: %s", err)
+	}
+	if _, err := w.Write([]byte(msg)); err != nil {
+		t.Fatalf("Data write failed: %s", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("Bad data response: %s", err)
+	}
+
+	if err := c.Quit(); err != nil {
+		t.Fatalf("QUIT failed: %s", err)
+	}
+
+	if err != nil {
+		t.Errorf("Command failed: %v", err)
+	}
+}
