@@ -11,6 +11,7 @@ import (
 	"crypto/x509"
 	"io"
 	"net"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -868,7 +869,20 @@ func TestGmailSmtpHello(t *testing.T) {
 }
 
 func TestGmailSmtpStartTls(t *testing.T) {
-	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	sender := os.Getenv("SENDER")
+	if sender == "" {
+		sender = "test@example.com"
+	}
+	recipient := os.Getenv("RECIPIENT")
+	if recipient == "" {
+		recipient = "golang-nuts@googlegroups.com"
+	}
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "smtp.google.com:25"
+	}
+
+	addr, port, err := net.SplitHostPort(host)
 	conn, err := net.Dial("tcp", addr + ":" + port)
 
 	if tcpConn, ok := conn.(*net.TCPConn); ok {
@@ -895,10 +909,10 @@ func TestGmailSmtpStartTls(t *testing.T) {
 		t.Errorf("StartTLS: %v", err)
 	}
 
-	if err := c.Mail("nikado@arara.com"); err != nil {
+	if err := c.Mail(sender); err != nil {
 		t.Fatalf("MAIL should require authentication: %s", err)
 	}
-	if err := c.Rcpt("nikado.kei@gmail.com"); err != nil {
+	if err := c.Rcpt(recipient); err != nil {
 		t.Fatalf("RCPT failed: %s", err)
 	}
 	msg := `From: nikado@arara.com
@@ -929,7 +943,20 @@ Goodbye.`
 }
 
 func TestGmailSmtpStartTlsQuit(t *testing.T) {
-	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	sender := os.Getenv("SENDER")
+	if sender == "" {
+		sender = "test@example.com"
+	}
+	recipient := os.Getenv("RECIPIENT")
+	if recipient == "" {
+		recipient = "golang-nuts@googlegroups.com"
+	}
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "smtp.google.com:25"
+	}
+
+	addr, port, err := net.SplitHostPort(host)
 	conn, err := net.Dial("tcp", addr + ":" + port)
 
 	if tcpConn, ok := conn.(*net.TCPConn); ok {
@@ -966,7 +993,20 @@ func TestGmailSmtpStartTlsQuit(t *testing.T) {
 }
 
 func TestGmailSmtpStartTlsMailQuit(t *testing.T) {
-	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	sender := os.Getenv("SENDER")
+	if sender == "" {
+		sender = "test@example.com"
+	}
+	recipient := os.Getenv("RECIPIENT")
+	if recipient == "" {
+		recipient = "golang-nuts@googlegroups.com"
+	}
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "smtp.google.com:25"
+	}
+
+	addr, port, err := net.SplitHostPort(host)
 	conn, err := net.Dial("tcp", addr + ":" + port)
 
 	if tcpConn, ok := conn.(*net.TCPConn); ok {
@@ -993,7 +1033,7 @@ func TestGmailSmtpStartTlsMailQuit(t *testing.T) {
 		t.Errorf("StartTLS: %v", err)
 	}
 
-	if err := c.Mail("nikado@arara.com"); err != nil {
+	if err := c.Mail(sender); err != nil {
 		t.Fatalf("MAIL should require authentication: %s", err)
 	}
 	if err := c.Quit(); err != nil {
@@ -1006,7 +1046,20 @@ func TestGmailSmtpStartTlsMailQuit(t *testing.T) {
 }
 
 func TestGmailSmtpStartTlsMailRcptQuit(t *testing.T) {
-	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	sender := os.Getenv("SENDER")
+	if sender == "" {
+		sender = "test@example.com"
+	}
+	recipient := os.Getenv("RECIPIENT")
+	if recipient == "" {
+		recipient = "golang-nuts@googlegroups.com"
+	}
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "smtp.google.com:25"
+	}
+
+	addr, port, err := net.SplitHostPort(host)
 	conn, err := net.Dial("tcp", addr + ":" + port)
 
 	if tcpConn, ok := conn.(*net.TCPConn); ok {
@@ -1033,10 +1086,10 @@ func TestGmailSmtpStartTlsMailRcptQuit(t *testing.T) {
 		t.Errorf("StartTLS: %v", err)
 	}
 
-	if err := c.Mail("nikado@arara.com"); err != nil {
+	if err := c.Mail(sender); err != nil {
 		t.Fatalf("MAIL should require authentication: %s", err)
 	}
-	if err := c.Rcpt("nikado.kei@gmail.com"); err != nil {
+	if err := c.Rcpt(recipient); err != nil {
 		t.Fatalf("RCPT failed: %s", err)
 	}
 	if err := c.Quit(); err != nil {
@@ -1050,7 +1103,20 @@ func TestGmailSmtpStartTlsMailRcptQuit(t *testing.T) {
 
 
 func TestGmailSmtpStartTlsRsetQuit(t *testing.T) {
-	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	sender := os.Getenv("SENDER")
+	if sender == "" {
+		sender = "test@example.com"
+	}
+	recipient := os.Getenv("RECIPIENT")
+	if recipient == "" {
+		recipient = "golang-nuts@googlegroups.com"
+	}
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "smtp.google.com:25"
+	}
+
+	addr, port, err := net.SplitHostPort(host)
 	conn, err := net.Dial("tcp", addr + ":" + port)
 
 	if tcpConn, ok := conn.(*net.TCPConn); ok {
@@ -1089,7 +1155,20 @@ func TestGmailSmtpStartTlsRsetQuit(t *testing.T) {
 }
 
 func TestGmailSmtpStartTlsMailRcptRsetQuit(t *testing.T) {
-	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	sender := os.Getenv("SENDER")
+	if sender == "" {
+		sender = "test@example.com"
+	}
+	recipient := os.Getenv("RECIPIENT")
+	if recipient == "" {
+		recipient = "golang-nuts@googlegroups.com"
+	}
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "smtp.google.com:25"
+	}
+
+	addr, port, err := net.SplitHostPort(host)
 	conn, err := net.Dial("tcp", addr + ":" + port)
 
 	if tcpConn, ok := conn.(*net.TCPConn); ok {
@@ -1116,10 +1195,10 @@ func TestGmailSmtpStartTlsMailRcptRsetQuit(t *testing.T) {
 		t.Errorf("StartTLS: %v", err)
 	}
 
-	if err := c.Mail("nikado@arara.com"); err != nil {
+	if err := c.Mail(sender); err != nil {
 		t.Fatalf("MAIL should require authentication: %s", err)
 	}
-	if err := c.Rcpt("nikado.kei@gmail.com"); err != nil {
+	if err := c.Rcpt(recipient); err != nil {
 		t.Fatalf("RCPT failed: %s", err)
 	}
 	if err := c.Reset(); err != nil {
@@ -1136,7 +1215,20 @@ func TestGmailSmtpStartTlsMailRcptRsetQuit(t *testing.T) {
 }
 
 func TestGmailSmtpStartTlsMailRcptRestMailRcptDataQuit(t *testing.T) {
-	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	sender := os.Getenv("SENDER")
+	if sender == "" {
+		sender = "test@example.com"
+	}
+	recipient := os.Getenv("RECIPIENT")
+	if recipient == "" {
+		recipient = "golang-nuts@googlegroups.com"
+	}
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "smtp.google.com:25"
+	}
+
+	addr, port, err := net.SplitHostPort(host)
 	conn, err := net.Dial("tcp", addr + ":" + port)
 
 	if tcpConn, ok := conn.(*net.TCPConn); ok {
@@ -1162,20 +1254,20 @@ func TestGmailSmtpStartTlsMailRcptRestMailRcptDataQuit(t *testing.T) {
 	if err := c.StartTLS(tlsconfig); err != nil {
 		t.Errorf("StartTLS: %v", err)
 	}
-	if err := c.Mail("nikado+beforereset@arara.com"); err != nil {
+	if err := c.Mail(sender); err != nil {
 		t.Fatalf("MAIL should require authentication: %s", err)
 	}
-	if err := c.Rcpt("nikado.kei+beforereset@gmail.com"); err != nil {
+	if err := c.Rcpt(recipient); err != nil {
 		t.Fatalf("RCPT failed: %s", err)
 	}
 	if err := c.Reset(); err != nil {
 		t.Fatalf("RSET failed: %s", err)
 	}
 
-	if err := c.Mail("nikado+afterreset@arara.com"); err != nil {
+	if err := c.Mail(sender); err != nil {
 		t.Fatalf("MAIL should require authentication: %s", err)
 	}
-	if err := c.Rcpt("nikado.kei+afterreset@gmail.com"); err != nil {
+	if err := c.Rcpt(recipient); err != nil {
 		t.Fatalf("RCPT failed: %s", err)
 	}
 	msg := `From: nikado@arara.com
@@ -1206,7 +1298,20 @@ Goodbye.`
 }
 
 func TestGmailSmtpMailStartTlsMailRcptData(t *testing.T) {
-	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	sender := os.Getenv("SENDER")
+	if sender == "" {
+		sender = "test@example.com"
+	}
+	recipient := os.Getenv("RECIPIENT")
+	if recipient == "" {
+		recipient = "golang-nuts@googlegroups.com"
+	}
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "smtp.google.com:25"
+	}
+
+	addr, port, err := net.SplitHostPort(host)
 	conn, err := net.Dial("tcp", addr + ":" + port)
 
 	if tcpConn, ok := conn.(*net.TCPConn); ok {
@@ -1226,7 +1331,7 @@ func TestGmailSmtpMailStartTlsMailRcptData(t *testing.T) {
 	c.localName = "localhost"
 	err = nil
 
-	if err := c.Mail("nikado+before@arara.com"); err != nil {
+	if err := c.Mail(sender); err != nil {
 		t.Fatalf("MAIL should require authentication: %s", err)
 	}
 	var tlsconfig = &tls.Config {
@@ -1236,10 +1341,10 @@ func TestGmailSmtpMailStartTlsMailRcptData(t *testing.T) {
 		t.Errorf("StartTLS: %v", err)
 	}
 
-	if err := c.Mail("nikado+after@arara.com"); err != nil {
+	if err := c.Mail(sender); err != nil {
 		t.Fatalf("MAIL should require authentication: %s", err)
 	}
-	if err := c.Rcpt("nikado.kei+beforereset@gmail.com"); err != nil {
+	if err := c.Rcpt(recipient); err != nil {
 		t.Fatalf("RCPT failed: %s", err)
 	}
 	msg := `From: nikado@arara.com
@@ -1269,7 +1374,20 @@ Goodbye.`
 }
 
 func TestGmailSmtpMailRcptStartTlsMailRcpt(t *testing.T) {
-	addr, port, err := net.SplitHostPort("gmail-smtp-in.l.google.com:25")
+	sender := os.Getenv("SENDER")
+	if sender == "" {
+		sender = "test@example.com"
+	}
+	recipient := os.Getenv("RECIPIENT")
+	if recipient == "" {
+		recipient = "golang-nuts@googlegroups.com"
+	}
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "smtp.google.com:25"
+	}
+
+	addr, port, err := net.SplitHostPort(host)
 	conn, err := net.Dial("tcp", addr + ":" + port)
 
 	if tcpConn, ok := conn.(*net.TCPConn); ok {
@@ -1289,10 +1407,10 @@ func TestGmailSmtpMailRcptStartTlsMailRcpt(t *testing.T) {
 	c.localName = "localhost"
 	err = nil
 
-	if err := c.Mail("nikado+before@arara.com"); err != nil {
+	if err := c.Mail(sender); err != nil {
 		t.Fatalf("MAIL should require authentication: %s", err)
 	}
-	if err := c.Rcpt("nikado.kei+before@gmail.com"); err != nil {
+	if err := c.Rcpt(recipient); err != nil {
 		t.Fatalf("RCPT failed: %s", err)
 	}
 
@@ -1303,10 +1421,10 @@ func TestGmailSmtpMailRcptStartTlsMailRcpt(t *testing.T) {
 		t.Errorf("StartTLS: %v", err)
 	}
 
-	if err := c.Mail("nikado+after@arara.com"); err != nil {
+	if err := c.Mail(sender); err != nil {
 		t.Fatalf("MAIL should require authentication: %s", err)
 	}
-	if err := c.Rcpt("nikado.kei+after@gmail.com"); err != nil {
+	if err := c.Rcpt(recipient); err != nil {
 		t.Fatalf("RCPT failed: %s", err)
 	}
 	msg := `From: nikado@arara.com
